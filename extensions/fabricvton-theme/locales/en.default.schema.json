@@ -1,0 +1,52 @@
+{
+  "blocks": {
+    "fabricvton_app_embed": {
+      "name": "Fabric VTON app embed",
+      "settings": {
+        "enabled": {
+          "label": "Enable embed"
+        },
+        "label": {
+          "label": "Label"
+        },
+        "button_label": {
+          "label": "Button label"
+        },
+        "button_hint": {
+          "label": "Button hint"
+        },
+        "button_position": {
+          "label": "Button position",
+          "options": {
+            "bottom_right": "Bottom right",
+            "bottom_left": "Bottom left"
+          }
+        },
+        "modal_heading": {
+          "label": "Modal heading"
+        },
+        "modal_description": {
+          "label": "Modal description"
+        },
+        "upload_label": {
+          "label": "Upload label"
+        },
+        "upload_hint": {
+          "label": "Upload hint"
+        },
+        "preview_label": {
+          "label": "Preview label"
+        },
+        "empty_preview_text": {
+          "label": "Empty preview text"
+        },
+        "primary_action_label": {
+          "label": "Primary button label"
+        },
+        "cancel_label": {
+          "label": "Cancel button label"
+        }
+      }
+    }
+  }
+}
