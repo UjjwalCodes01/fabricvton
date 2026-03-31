@@ -7,11 +7,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   // 1. Authenticate the Storefront App Proxy Request
+  // authenticate.public.appProxy() throws if the Shopify HMAC signature is invalid.
+  // It resolves (with session=null) for guest/anonymous shoppers — that's expected and fine.
+  // Do NOT gate on !session; session is only populated when a customer is logged in.
   const { session } = await authenticate.public.appProxy(request);
 
-  if (!session) {
-    return new Response("Unauthorized App Proxy Request", { status: 401 });
-  }
+  // Optional: capture logged-in customer ID for analytics/personalisation
+  const url = new URL(request.url);
+  const customerId = url.searchParams.get("logged_in_customer_id"); // may be null for guests
 
   try {
     // 2. Parse the multipart form data sent by our frontend JS
@@ -26,45 +29,108 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return Response.json({ error: "Missing product image URL" }, { status: 400 });
     }
 
-    // 3. VTON Model API Call (Replicate / Custom API)
-    // Here we read the custom API credentials or fallback to a simulated response
-    const vtonApiUrl = process.env.VTON_API_URL;
-    const vtonApiKey = process.env.VTON_API_KEY;
+    // Normalize protocol-relative URLs (e.g. //cdn.shopify.com) → https://
+    const normalizedProductImageUrl = productImageUrl.startsWith("//")
+      ? `https:${productImageUrl}`
+      : productImageUrl;
+
+    // 3. GenLook VTON Model API Call
+    const baseUrl = process.env.GENLOOK_BASE_URL || "https://api.genlook.app/tryon/v1";
+    const apiKey = process.env.GENLOOK_API_KEY;
 
     let resultUrl = "";
 
-    if (vtonApiUrl && vtonApiKey) {
-      console.log(`Sending try-on request to ${vtonApiUrl} for product: ${productImageUrl}`);
+    if (apiKey) {
+      console.log(`Starting GenLook try-on flow for product: ${productImageUrl}`);
       
-      // If the third-party API expects a multipart payload:
-      const apiFormData = new FormData();
-      apiFormData.append("human_image", customerImage); // User's uploaded file
-      apiFormData.append("garm_image_url", productImageUrl); // Product image URL
-      
-      const apiResponse = await fetch(vtonApiUrl, {
+      const headers = {
+        "x-api-key": apiKey
+      };
+
+      // Step 1: Create a Product
+      const productRes = await fetch(`${baseUrl}/products`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${vtonApiKey}`,
-          // Note: When sending FormData via fetch, do NOT set Content-Type manually.
-          // The browser/Node will automatically set the correct boundary.
+          ...headers,
+          "Content-Type": "application/json"
         },
-        body: apiFormData,
+        body: JSON.stringify({
+          externalId: `prod-${Date.now()}`,
+          title: "Try-On Product",
+          description: "Shopify Try-On integration product",
+          imageUrls: [normalizedProductImageUrl]
+        })
       });
+      if (!productRes.ok) throw new Error(`Product creation failed: ${await productRes.text()}`);
+      const productData = await productRes.json();
+      const productId = productData.externalId || productData.productId;
 
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        console.error("VTON API Error:", errorText);
-        throw new Error("Failed to generate try-on image from external API");
-      }
-
-      const apiJson = await apiResponse.json();
+      // Step 2: Upload Customer Photo
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", customerImage);
       
-      // Extract the output URL (adjust keys based on your specific model's response)
-      resultUrl = apiJson.imageUrl || apiJson.result_url || apiJson.output;
+      const uploadRes = await fetch(`${baseUrl}/images/upload`, {
+        method: "POST",
+        headers: headers, // Do NOT set Content-Type manually for FormData
+        body: uploadFormData
+      });
+      if (!uploadRes.ok) throw new Error(`Image upload failed: ${await uploadRes.text()}`);
+      const uploadData = await uploadRes.json();
+      const imageId = uploadData.imageId;
 
-      if (!resultUrl) {
-         throw new Error("External API did not return a recognizable image URL");
+      console.log(`Product created: ${productId}, Image uploaded: ${imageId}`);
+
+      // Step 3: Create Try-On
+      const tryonRes = await fetch(`${baseUrl}/try-on`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          productId: productId,
+          customerImageId: imageId
+        })
+      });
+      if (!tryonRes.ok) throw new Error(`Try-On generation failed: ${await tryonRes.text()}`);
+      const tryonData = await tryonRes.json();
+      if (!tryonData.success) {
+        throw new Error(`Try-On generation API rejected: ${tryonData.error || tryonData.message || JSON.stringify(tryonData)}`);
       }
+      const generationId = tryonData.generationId;
+
+      console.log(`Generation started: ${generationId}. Polling...`);
+
+      // Step 4: Poll for Completion
+      let completed = false;
+      const startTime = Date.now();
+      const timeoutMs = 30000; // 30s polling timeout
+
+      while (!completed) {
+        if (Date.now() - startTime > timeoutMs) {
+           throw new Error("Generation timed out");
+        }
+        
+        const pollRes = await fetch(`${baseUrl}/generations/${generationId}`, {
+          method: "GET",
+          headers: headers
+        });
+        
+        if (!pollRes.ok) throw new Error(`Polling failed: ${await pollRes.text()}`);
+        const pollData = await pollRes.json();
+
+        if (pollData.status === "COMPLETED") {
+          resultUrl = pollData.resultImageUrl;
+          completed = true;
+          console.log("Generation COMPLETED successfully.");
+        } else if (pollData.status === "FAILED") {
+          throw new Error(`Generation FAILED: ${pollData.errorMessage || JSON.stringify(pollData)}`);
+        } else {
+          // PENDING or PROCESSING. Wait 2 seconds before next poll.
+          await new Promise(res => setTimeout(res, 2000));
+        }
+      }
+
     } else {
       // 4. Mock simulation mode (useful for testing UI without burning API credits)
       console.log("No VTON API credentials found. Running in simulation mode...");
