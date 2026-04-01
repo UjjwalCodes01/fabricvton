@@ -26,13 +26,16 @@
 
     if (!launcher || !modal || !input || !primaryAction || !stepUpload || !stepResult) return;
 
+    // ── Portal modal to <body> so position:fixed works regardless of parent transforms ──
+    document.body.appendChild(modal);
+
     let uploadedFile = null;
     let userPhotoUrl = null;
 
     const setOpen = (isOpen) => {
       modal.hidden = !isOpen;
       launcher.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      document.body.classList.toggle("fabricvton-block-open", isOpen);
+      document.body.classList.toggle("fabricvton-modal-open", isOpen);
     };
 
     const showStep = (step) => {
@@ -133,7 +136,14 @@
           body: formData,
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          let errMsg = `HTTP ${response.status}`;
+          try {
+            const errData = await response.json();
+            if (errData.error) errMsg = errData.error;
+          } catch (_) {}
+          throw new Error(errMsg);
+        }
         const data = await response.json();
         if (!data.resultUrl) throw new Error(data.error || "No result URL returned");
 

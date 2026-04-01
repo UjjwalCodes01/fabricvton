@@ -15,21 +15,175 @@ datasource db {
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
+}
+
+// Shop-level settings and billing status
+model Shop {
+  id     String  @id @default(cuid())
+  domain String  @unique // myshopify domain
+  name   String?
+  email  String?
+
+  // Billing
+  billingStatus      String    @default("none") // none, trial, active, cancelled
+  subscriptionId     String? // Shopify subscription gid
+  trialStartedAt     DateTime?
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+
+  // Usage tracking
+  usageThisMonth Int       @default(0)
+  usageResetAt   DateTime?
+
+  // Configuration
+  tryOnEnabled        Boolean @default(true)
+  buttonPosition      String  @default("below_add_to_cart") // below_add_to_cart, floating, custom
+  buttonText          String  @default("Try It On")
+  allowedProductTypes String? // JSON array of product types, null = all
+
+  // Status
+  isActive     Boolean   @default(true)
+  suspendedAt  DateTime?
+  lastActiveAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tryOnEvents    TryOnEvent[]
+  productConfigs ProductTryOnConfig[]
+  supportTickets SupportTicket[]
+}
+
+// Track each try-on request for analytics and billing
+model TryOnEvent {
+  id     String @id @default(cuid())
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  // Request context
+  productImageUrl String
+  productId       String? // Extracted product ID if available
+
+  // Result
+  success      Boolean
+  errorMessage String?
+
+  // Performance
+  durationMs Int? // Total processing time
+
+  // Billing
+  billed   Boolean   @default(false)
+  billedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([shopId, createdAt])
+  @@index([shopId, billed])
+}
+
+// Product-specific try-on configuration
+model ProductTryOnConfig {
+  id     String @id @default(cuid())
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  productId String // Shopify product ID
+  variantId String? // Optional variant-specific config
+  sku       String?
+
+  // Custom garment image for this product
+  garmentImageUrl String?
+  garmentCategory String? // tops, bottoms, dresses, etc.
+
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shopId, productId, variantId])
+  @@index([shopId])
+}
+
+// API call logs for debugging and monitoring
+model ApiLog {
+  id         String  @id @default(cuid())
+  shopId     String?
+  shopDomain String?
+
+  // Request info
+  endpoint   String
+  method     String
+  statusCode Int
+
+  // Timing
+  durationMs Int?
+
+  // Result
+  success      Boolean
+  errorType    String?
+  errorMessage String?
+
+  // Context
+  productId    String?
+  modelVersion String?
+
+  createdAt DateTime @default(now())
+
+  @@index([shopDomain, createdAt])
+  @@index([createdAt])
+  @@index([success, createdAt])
+}
+
+// Support tickets from merchants
+model SupportTicket {
+  id     String @id @default(cuid())
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  email     String
+  issueType String // billing, technical, feature_request, other
+  subject   String
+  message   String
+
+  status     String    @default("open") // open, in_progress, resolved, closed
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shopId, createdAt])
+  @@index([status])
+}
+
+// Platform settings (for super admin)
+model PlatformSettings {
+  id String @id @default("default")
+
+  // Active model configuration
+  activeModelVersion   String  @default("genlook_v1")
+  fallbackModelVersion String?
+
+  // Global settings
+  maintenanceMode Boolean @default(false)
+  maxTrialTryOns  Int     @default(50)
+  pricePerTryOn   Float   @default(0.10)
+
+  updatedAt DateTime @updatedAt
 }

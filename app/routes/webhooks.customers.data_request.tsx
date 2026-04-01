@@ -13,12 +13,12 @@ import { authenticate } from "../shopify.server";
  * handler must be updated to compile and return all stored PII.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { shop, topic, payload } = await authenticate.webhook(request);
+  const { shop, topic } = await authenticate.webhook(request);
 
   console.log(`Received ${topic} webhook for ${shop}`);
   console.log(
     "Customer data request received — no customer PII is stored by FabricVTON at this time.",
-    { shopDomain: shop, customerId: (payload as Record<string, Record<string, unknown>>)?.customer?.id },
+    { shopDomain: shop },
   );
 
   return new Response(null, { status: 200 });

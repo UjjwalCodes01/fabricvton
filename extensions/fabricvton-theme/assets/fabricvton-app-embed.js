@@ -34,6 +34,9 @@
       !stepUpload || !stepResult || !generatingEl || !comparisonEl
     ) return;
 
+    // ── Portal modal to <body> so position:fixed works regardless of parent transforms ──
+    document.body.appendChild(modal);
+
     // ── State ────────────────────────────────────────────────────────
     let uploadedFile = null;
     let userPhotoUrl = null; // object URL for uploaded photo
@@ -42,7 +45,7 @@
     const setOpen = (isOpen) => {
       modal.hidden = !isOpen;
       launcher.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      document.body.classList.toggle("fabricvton-try-on-open", isOpen);
+      document.body.classList.toggle("fabricvton-modal-open", isOpen);
     };
 
     const showStep = (step) => {
