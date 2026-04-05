@@ -5,6 +5,8 @@ import { canPerformTryOn, getOrCreateShop } from "../lib/billing.server";
 import { logApiCall } from "../lib/logs.server";
 import { getPlatformSettings } from "../lib/platform.server";
 
+export const maxDuration = 60;
+
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
