@@ -39,6 +39,38 @@ export default function App() {
                 <span className={styles.previewDot} />
                 <span className={styles.previewDot} />
               </div>
+              <div className={styles.previewGrid}>
+                <div className={styles.previewPanel}>
+                  <span className={styles.previewLabel}>Storefront</span>
+                  <div className={styles.previewImage} />
+                  <div className={styles.previewLine} />
+                  <div className={styles.previewLineShort} />
+                </div>
+                <div className={styles.previewPanel}>
+                  <span className={styles.previewLabel}>AI Try-On</span>
+                  <div className={styles.previewImageAlt} />
+                  <div className={styles.previewStats}>
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.metricRow}>
+              <div className={styles.metricCard}>
+                <span className={styles.metricValue}>Theme App</span>
+                <span className={styles.metricLabel}>plug in with no-code setup</span>
+              </div>
+              <div className={styles.metricCard}>
+                <span className={styles.metricValue}>AI Try-On</span>
+                <span className={styles.metricLabel}>customer previews in seconds</span>
+              </div>
+              <div className={styles.metricCard}>
+                <span className={styles.metricValue}>Merchant Tools</span>
+                <span className={styles.metricLabel}>analytics, billing, settings</span>
+              </div>
+            </div>
           </div>
 
           <div className={styles.launchPanel}>
