@@ -21,13 +21,16 @@ import {
   Banner,
 } from "@shopify/polaris";
 import { authenticateAdminRequest } from "../lib/shopify-auth.server";
-import { getShopBillingInfo, BILLING_CONFIG } from "../lib/billing.server";
+import { getOrCreateShop, getShopBillingInfo, BILLING_CONFIG } from "../lib/billing.server";
 import { getShopEventStats } from "../lib/events.server";
 import { getShopConfig } from "../lib/config.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticateAdminRequest(request);
   const shopDomain = session.shop;
+
+  // Ensure a shop row exists before dashboard queries run.
+  await getOrCreateShop(shopDomain);
 
   const [billing, stats, config] = await Promise.all([
     getShopBillingInfo(shopDomain),
