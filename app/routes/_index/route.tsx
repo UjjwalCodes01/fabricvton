@@ -33,6 +33,30 @@ export default function App() {
               storefront, with no custom theme coding and a merchant dashboard
               for analytics, settings, and billing.
             </p>
+            <div className={styles.previewShell} aria-hidden="true">
+              <div className={styles.previewTopbar}>
+                <span className={styles.previewDot} />
+                <span className={styles.previewDot} />
+                <span className={styles.previewDot} />
+              </div>
+              <div className={styles.previewGrid}>
+                <div className={styles.previewPanel}>
+                  <span className={styles.previewLabel}>Storefront</span>
+                  <div className={styles.previewImage} />
+                  <div className={styles.previewLine} />
+                  <div className={styles.previewLineShort} />
+                </div>
+                <div className={styles.previewPanel}>
+                  <span className={styles.previewLabel}>AI Try-On</span>
+                  <div className={styles.previewImageAlt} />
+                  <div className={styles.previewStats}>
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className={styles.metricRow}>
               <div className={styles.metricCard}>
                 <span className={styles.metricValue}>Theme App</span>
