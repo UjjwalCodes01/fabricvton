@@ -32,11 +32,47 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Ensure a shop row exists before dashboard queries run.
   await getOrCreateShop(shopDomain);
 
-  const [billing, stats, config] = await Promise.all([
+  const [billingResult, statsResult, configResult] = await Promise.allSettled([
     getShopBillingInfo(shopDomain),
     getShopEventStats(shopDomain),
     getShopConfig(shopDomain),
   ]);
+
+  if (billingResult.status === "rejected") {
+    console.error("[Dashboard] Failed to load billing info", {
+      shopDomain,
+      error: billingResult.reason,
+    });
+  }
+
+  if (statsResult.status === "rejected") {
+    console.error("[Dashboard] Failed to load event stats", {
+      shopDomain,
+      error: statsResult.reason,
+    });
+  }
+
+  if (configResult.status === "rejected") {
+    console.error("[Dashboard] Failed to load shop config", {
+      shopDomain,
+      error: configResult.reason,
+    });
+  }
+
+  const billing =
+    billingResult.status === "fulfilled"
+      ? billingResult.value
+      : {
+          status: "none" as const,
+          subscriptionId: null,
+          trialEndsAt: null,
+          usageThisMonth: 0,
+          canUseTryOn: false,
+          message: "Billing data is temporarily unavailable.",
+        };
+
+  const stats = statsResult.status === "fulfilled" ? statsResult.value : null;
+  const config = configResult.status === "fulfilled" ? configResult.value : null;
 
   return {
     shopDomain,
