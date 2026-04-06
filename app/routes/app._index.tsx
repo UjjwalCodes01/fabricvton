@@ -1,5 +1,5 @@
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { redirect } from "react-router";
+import { redirect, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticateAdminRequest } from "../lib/shopify-auth.server";
 
@@ -16,7 +16,7 @@ export default function Index() {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(null);
+  return boundary.error(useRouteError());
 }
 
 export const headers: HeadersFunction = (headersArgs) => {

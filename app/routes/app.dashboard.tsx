@@ -5,7 +5,7 @@
  */
 
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { useLoaderData, Link } from "react-router";
+import { useLoaderData, Link, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import {
   Page,
@@ -207,7 +207,7 @@ export default function MerchantDashboard() {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(null);
+  return boundary.error(useRouteError());
 }
 
 export const headers: HeadersFunction = (headersArgs) => {

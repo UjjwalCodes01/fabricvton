@@ -5,7 +5,7 @@
  */
 
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useSearchParams } from "react-router";
+import { useLoaderData, useSearchParams, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import {
   Page,
@@ -194,7 +194,7 @@ export default function AdminLogsPage() {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(null);
+  return boundary.error(useRouteError());
 }
 
 export const headers: HeadersFunction = (headersArgs) => {
