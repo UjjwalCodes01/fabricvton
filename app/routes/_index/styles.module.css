@@ -34,26 +34,27 @@
 
 .heading {
   margin: 0;
-  font-size: clamp(2.75rem, 5vw, 4.7rem);
+  font-size: clamp(2.7rem, 4.3vw, 4.15rem);
   font-weight: 800;
-  line-height: 0.98;
+  line-height: 1.02;
   letter-spacing: -0.04em;
   color: #140f2d;
-  max-width: 12ch;
+  max-width: 8.5ch;
+  text-wrap: balance;
 }
 
 .text {
   margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  line-height: 1.72;
   color: #50486a;
-  max-width: 40rem;
+  max-width: 34rem;
 }
 
 .content {
   display: grid;
   gap: 2rem;
-  max-width: 74rem;
+  max-width: 70rem;
   width: 100%;
   position: relative;
   z-index: 1;
@@ -61,14 +62,14 @@
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 28rem);
-  gap: 2rem;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1.08fr) minmax(20rem, 25.5rem);
+  gap: 1.75rem;
+  align-items: start;
 }
 
 .heroCopy {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.05rem;
   align-content: center;
 }
 
@@ -76,13 +77,13 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .metricCard {
   display: grid;
   gap: 0.35rem;
-  padding: 1rem 1.05rem;
+  padding: 0.95rem 1rem;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(109, 40, 217, 0.10);
   border-radius: 18px;
@@ -105,13 +106,14 @@
   display: grid;
   gap: 1.25rem;
   align-content: start;
-  padding: 1.5rem;
+  padding: 1.35rem;
   border-radius: 28px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84)),
     linear-gradient(135deg, rgba(109, 40, 217, 0.08), rgba(236, 72, 153, 0.08));
   border: 1px solid rgba(109, 40, 217, 0.12);
   box-shadow: 0 24px 60px rgba(42, 26, 73, 0.12);
+  min-height: 0;
 }
 
 .panelHeader {
@@ -130,15 +132,15 @@
 
 .panelTitle {
   margin: 0;
-  font-size: 1.8rem;
-  line-height: 1.05;
+  font-size: 1.55rem;
+  line-height: 1.08;
   color: #1c1536;
 }
 
 .panelText {
   margin: 0;
-  font-size: 0.98rem;
-  line-height: 1.6;
+  font-size: 0.95rem;
+  line-height: 1.65;
   color: #5c5475;
 }
 
@@ -258,11 +260,17 @@
   }
 
   .heading {
-    font-size: 2.4rem;
+    font-size: 2.45rem;
+    max-width: 100%;
   }
 
   .hero {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .heroCopy {
+    gap: 1rem;
   }
 
   .metricRow,
@@ -272,5 +280,51 @@
 
   .launchPanel {
     padding: 1.25rem;
+  }
+
+  .text,
+  .panelText {
+    max-width: 100%;
+  }
+}
+
+@media only screen and (max-width: 36rem) {
+  .index {
+    padding: 1.25rem 0.85rem 2rem;
+  }
+
+  .content {
+    gap: 1.25rem;
+  }
+
+  .heading {
+    font-size: 2.05rem;
+    line-height: 1.03;
+  }
+
+  .text {
+    font-size: 0.96rem;
+  }
+
+  .launchPanel,
+  .featureCard,
+  .metricCard {
+    border-radius: 18px;
+  }
+
+  .launchPanel {
+    padding: 1rem;
+  }
+
+  .panelTitle {
+    font-size: 1.35rem;
+  }
+
+  .button {
+    width: 100%;
+  }
+
+  .featureCard {
+    padding: 1.15rem;
   }
 }
